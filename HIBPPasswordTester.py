@@ -56,7 +56,7 @@ def readFile(filePath):
 # ------------------------------MAIN------------------------------------#
 def main():
     # Construct the argument parser
-    ap = argparse.ArgumentParser(description='Test passwords in HIBP.')
+    ap = argparse.ArgumentParser(description='Test passwords in haveibeenpwned leaked passwords database. Test is secure, only 5 chars from passwords hash are sent to HIBP server. To learn more look for k-Anonimity.')
 
     # Add the arguments to the parser
     ap.add_argument('-p', '--password', required=False, help="Password to test")
