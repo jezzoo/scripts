@@ -8,8 +8,13 @@ import socket
 import ssl
 from json2html import *
 import requests
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
 import io
 from json2table import convert
+
+#disable request warnings
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+
 
 def domain_verify(domain):
     return validators.domain(domain)
@@ -75,8 +80,6 @@ def getcert(domain,https_port):
 
         #SAN
         subjectAltName={'DNS':[]}
-        print(cert['subjectAltName'])
-        print(len(cert['subjectAltName']))
         for i in range(len(cert['subjectAltName'])):
             san=cert['subjectAltName'][i][1]
             result['subjectAltName'].append(san)
