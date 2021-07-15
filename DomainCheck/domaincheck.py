@@ -12,48 +12,34 @@ import io
 from json2table import convert
 
 def domain_verify(domain):
-    #print('Verifying domain ' + domain)
     return validators.domain(domain)
 
 
 def domain_resolve(domain):
-    #print("Resolving domain " + domain)
     result={'CNAME':[],'A':[]}
     try:
         for rdata in resolver.resolve(domain, 'A') :
             rdata_lines=rdata.address.splitlines(True)
             for rdata_line in rdata_lines:
                 result['A'].append(rdata_line)
-        #    print(rdata_lines)
-        #print(domain + ' - domain resolved to ' + str(rdata.address.splitlines(True)))
         try:
-        #    print('2')
             for rdata in resolver.resolve(domain, 'CNAME') :
                 result["CNAME"]=(rdata.target.to_text())
         except:
-            #print("Oops!")
             result['CNAME']="False"
 
-        
         return result
     except resolver.NXDOMAIN:
-        #result={'NX':True}
-        #print(domain + ' - domain resolution failed.')
         return False
     except resolver.NoAnswer:
-        #result={'NX':True}
-        #print(domain + ' - domain resolution failed.')
         return False
     except resolver.NoNameservers:
-        #result={'NX':True}
-        #print(domain + ' - domain resolution failed.')
         return False
     except resolver.Timeout:
         return False
 
 
 def port_check(address,port):
-    #print("Checking port " + str(port) + " on host " + address)
     result={'TCP_'+str(port):False}
     s = socket.socket()
     s.settimeout(1)
@@ -69,7 +55,6 @@ def port_check(address,port):
 
 def tupletodict(tup):
     result=dict((x, y) for x, y in tup)
-    #print("res: "+str(result))
     return result
 
 def getcert(domain,https_port):
@@ -110,7 +95,6 @@ def get_http_ec(domain,protocol,port):
     request_string=protocol+"://"+domain+":"+str(port)
     try:
         r = requests.get(request_string, verify=False)
-        #print(request_string+" resp url: "+str(r.url)+"resp red hist:"+str(r.history)+"resp stat code: "+str(r.status_code))
         error_codes=[]
         for item in r.history:
             error_codes.append(str(item.status_code))
@@ -118,22 +102,15 @@ def get_http_ec(domain,protocol,port):
         result={'http_error_code':{'request_string':request_string,'response_url':r.url,'http_response_codes':error_codes}}
     except Exception as e:
         result='Exception: ' + str(e)
-    #print(result)
     return result
 
 
 
 def get_domain_info(domain,http_port,https_port,flag_cert,flag_dns,flag_httpec,flag_netaccess,flag_thumb,flag_all):
-    #print((domain,http_port,https_port,flag_cert,flag_dns,flag_httpec,flag_netaccess,flag_thumb))
     #result initialization
     result={'domain':domain}
     #domain validation
     if domain_verify(domain):
-        #print(domain + ' - domain name verification: OK')
-        #resolve domaincl
-
-        #print('11111' + str(domain_resolve(domain)))
-
         if not domain_resolve(domain):
             result['error']="Domain resolution failed"
         else:   
@@ -141,13 +118,10 @@ def get_domain_info(domain,http_port,https_port,flag_cert,flag_dns,flag_httpec,f
             if (flag_netaccess or flag_all):
                 portcheck={'port_check':[]}
             #HTTP port check
-                #print(port_check(domain,http_port))
                 portcheck['port_check'].append({'protocol':'HTTP',**port_check(domain,http_port)})
                 http_status=portcheck['port_check'][0]['Status']
             #HTTPS port check
-                #print(port_check(domain,https_port))
                 portcheck['port_check'].append({'protocol':'HTTPS',**port_check(domain,https_port)})
-                #print(portcheck)
                 https_status=portcheck['port_check'][1]['Status']
                 for i in range(len(portcheck['port_check'])):
                     portcheck['port_check'][i]['Status']=str(portcheck['port_check'][i]['Status'])
@@ -164,7 +138,6 @@ def get_domain_info(domain,http_port,https_port,flag_cert,flag_dns,flag_httpec,f
                     pass
             
             #HTTP Error Code Check
-            
             if (flag_httpec or flag_all):
                 ec={'HTTP_error_code':[]}
                 if https_status:
@@ -177,13 +150,11 @@ def get_domain_info(domain,http_port,https_port,flag_cert,flag_dns,flag_httpec,f
                    
                 else:
                     pass
-                #print(ec)
                 result={**result,**ec}
                 
             
 
     else:
-        #print(domain + '- domain name verification: Failed')
         result['error']="Domain verification failed"
 
     
@@ -204,27 +175,15 @@ def read_file(file):
         result=False
         return result
     else:
-        #print(lines)
         for item in lines:
-            #print(item.strip())
-            
-            if item.rstrip():
+             if item.rstrip():
                 result.append(item.strip())
-        #print(result)
     return result
 
-
-
-
-
-
 def parse_file(file):
-    print("Testing path: " + file)   
-    error={}
     result=[]
     http_default=80
     https_default=443
-    #print(test_file(file))
     if test_file(file):
         print('Parsing file: ' + file)
         items=read_file(file)
@@ -243,46 +202,15 @@ def parse_file(file):
                 field[1]=https_default
             else:
                 field[2]=int(field[2])
-            #print((field))
             result.append(field)
-            #print(result)
-
-
-        error={'error_code':0}
     else:
         print("Path provided:" + file + " is wrong or not accesible")
         result=False
     return result
 
-def create_html(json_string):
-    result = io.StringIO()
-    build_direction = "LEFT_TO_RIGHT"
-    table_attributes = {"style" : "width:100%"}
-    result.write("""<!doctype html>
-    <html>
-    <head>
-    <!-- Latest compiled and minified CSS -->
-    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-    
-    <!-- Optional theme -->
-    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css">
-    
-    </head><body>
-    <!-- Latest compiled and minified JavaScript -->
-    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    """)
-    #result.write(json2html.convert(json=json_string, table_attributes="class=\"table table-bordered table-hover\""))
-    result.write(convert(json_string, build_direction=build_direction, table_attributes=table_attributes))
-    #print(convert(json_string, build_direction=build_direction, table_attributes=table_attributes))
-    result.write('</body></html>')
-    #print(result)
-    return result
-
 def save_output(output_path,json_string):
     with open(output_path, 'w', encoding='utf-8') as file:
         json.dump(json_string, file, ensure_ascii=False, indent=4)
-        
-
 
 def main():
     # Construct the argument parser
@@ -342,19 +270,7 @@ def main():
         
         elif domain!=None:
             result['domaininfo'].append(get_domain_info(domain,http_port,https_port,flag_cert,flag_dns,flag_httpec,flag_netaccess,flag_thumb,flag_all))
-            #result['domaininfo'].append(getdomaininfo(domain))
-
-    #pp = pprint.PrettyPrinter(indent=4)
-    #pp.pprint(result)
     json_string=json.dumps(result['domaininfo'])
-    #print('type: '+str(type(json_string)))
-    #print('type: '+str(type(result)))
-    #print(dir(json_string))
-    #print(result) #############verify if this is JSON needed
-    #html_table=json2html.convert(json = domaininfo, table_attributes="id=\"info-table\" class=\"table table-bordered table-hover\" style=\"border-color:black\"")
-    #print(html_table)
-    #print(create_html(json_string).getvalue())
-    #print(create_html(result).getvalue())
     print(json_string)
     if output_path!='':
         save_output(output_path,result['domaininfo'])
